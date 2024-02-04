@@ -6,13 +6,20 @@ use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Models\Product;
 
+use Faker\Provider\Text;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
-use Filament\Forms\Components\Card;
 
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+
+use Filament\Tables\Filters\TernaryFilter;
+
+use Filament\Forms\Components\Card;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 
 use Mohamedsabil83\FilamentFormsTinyeditor\Components\TinyEditor;
 
@@ -22,13 +29,17 @@ class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?string $navigationIcon = 'heroicon-o-cube';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                     Card::make()->schema([
+                        Toggle::make('status')
+                            ->label('Enable Product')
+                            ->default(true),
+
                         TextInput::make('title')
                             ->required()
                             ->autofocus(),
@@ -48,6 +59,20 @@ class ProductResource extends Resource
                         TextInput::make('price')
                             ->numeric()
                             ->prefix('$')
+                            ->mask(fn ($mask) => $mask->patternBlocks([
+                                'money' => fn ($mask) => $mask
+                                    ->numeric()
+                                    ->mapToDecimalSeparator(['.'])
+                                    ->decimalPlaces(2)
+                                    ->padFractionalZeros()
+                                 ])
+                                ->pattern('money')
+                            )
+                            ->required(),
+
+                        TextInput::make('quantity')
+                            ->numeric()
+                            ->default(1)
                             ->required(),
 
                         TextInput::make('weight')
@@ -62,13 +87,22 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('title'),
-                Tables\Columns\TextColumn::make('price')
+                TextColumn::make('id')->sortable(),
+                TextColumn::make('title')->sortable()->searchable(),
+                TextColumn::make('price')
                     ->money('USD', true)
+                    ->sortable(),
+                TextColumn::make('quantity')
+                    ->sortable(),
+                IconColumn::make('status')
                     ->sortable()
+                    ->boolean()
             ])
             ->filters([
-                //
+                TernaryFilter::make('status')
+                    ->trueLabel('Enabled Products')
+                    ->falseLabel('Disabled Products')
+                    ->boolean()
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
