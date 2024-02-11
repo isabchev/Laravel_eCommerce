@@ -19,6 +19,7 @@ use Filament\Tables\Filters\TernaryFilter;
 
 use Filament\Forms\Components\Card;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 
 use Mohamedsabil83\FilamentFormsTinyeditor\Components\TinyEditor;
@@ -51,6 +52,11 @@ class ProductResource extends Resource
                                     $set('slug', Str::slug($get('title')));
                                 }
                             }),
+
+                        Select::make('categories')
+                            ->preload()
+                            ->multiple()
+                            ->relationship('categories', 'title'),
 
                         TinyEditor::make('description')
                             ->minHeight(300)
